@@ -7,14 +7,22 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="sky-common" />
-        <module name="sky-server" />
-        <module name="sky-pojo" />
+        <module name="coffee-server" />
+        <module name="coffee-common" />
+        <module name="coffee-pojo" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="sky-common" target="17" />
+      <module name="sky-pojo" target="1.8" />
+      <module name="sky-server" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="coffee-common" options="-parameters" />
+      <module name="coffee-pojo" options="-parameters" />
+      <module name="coffee-server" options="-parameters" />
       <module name="sky-common" options="-parameters" />
       <module name="sky-pojo" options="-parameters" />
       <module name="sky-server" options="-parameters" />
