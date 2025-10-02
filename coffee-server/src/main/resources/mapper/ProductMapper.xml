@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.coffee.mapper.ProductMapper">
+
+    <!-- 分页查询商品 -->
+    <select id="pageQuery" resultType="com.coffee.entity.Product">
+        SELECT * FROM products
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="isHot != null">
+                AND is_hot = #{isHot}
+            </if>
+            <if test="isRecommend != null">
+                AND is_recommend = #{isRecommend}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据ID查询商品 -->
+    <select id="getById" resultType="com.coffee.entity.Product">
+        SELECT * FROM products WHERE id = #{id}
+    </select>
+
+    <!-- 新增商品 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO products (
+            name, description, category_id, price, original_price,
+            image, images, tags, is_hot, is_recommend, stock, sales,
+            status, create_time, update_time
+        ) VALUES (
+                     #{name}, #{description}, #{categoryId}, #{price}, #{originalPrice},
+                     #{image}, #{images}, #{tags}, #{isHot}, #{isRecommend}, #{stock}, #{sales},
+                     #{status}, #{createTime}, #{updateTime}
+                 )
+    </insert>
+
+    <!-- 修改商品 -->
+    <update id="update">
+        UPDATE products
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="originalPrice != null">original_price = #{originalPrice},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="images != null">images = #{images},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="isHot != null">is_hot = #{isHot},</if>
+            <if test="isRecommend != null">is_recommend = #{isRecommend},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="sales != null">sales = #{sales},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除商品 -->
+    <delete id="deleteById">
+        DELETE FROM products WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除商品 -->
+    <delete id="deleteByIds">
+        DELETE FROM products WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据分类ID查询商品数量 -->
+    <select id="countByCategoryId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM products WHERE category_id = #{categoryId}
+    </select>
+
+    <!-- 修改商品状态 -->
+    <update id="updateStatus">
+        UPDATE products SET status = #{status}, update_time = NOW() WHERE id = #{id}
+    </update>
+
+</mapper>
