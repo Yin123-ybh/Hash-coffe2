@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coffee.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="com.coffee.entity.User">
+        <id column="id" property="id" />
+        <result column="username" property="username" />
+        <result column="phone" property="phone" />
+        <result column="password" property="password" />
+        <result column="openid" property="openid" />
+        <result column="nickname" property="nickname" />
+        <result column="avatar" property="avatar" />
+        <result column="gender" property="gender" />
+        <result column="birthday" property="birthday" />
+        <result column="points" property="points" />
+        <result column="vip_level" property="vipLevel" />
+        <result column="city" property="city" />
+        <result column="province" property="province" />
+        <result column="country" property="country" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <select id="getByOpenid" resultMap="BaseResultMap">
+        SELECT * FROM users WHERE openid = #{openid} AND status = 1
+    </select>
+
+    <select id="getById" resultMap="BaseResultMap">
+        SELECT * FROM users WHERE id = #{id} AND status = 1
+    </select>
+
+    <insert id="insert" parameterType="com.coffee.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (
+            username, phone, password, openid, nickname, avatar, gender,
+            city, province, country, status, create_time, update_time
+        ) VALUES (
+            #{username}, #{phone}, #{password}, #{openid}, #{nickname}, #{avatar}, #{gender},
+            #{city}, #{province}, #{country}, #{status}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.coffee.entity.User">
+        UPDATE users SET
+            nickname = #{nickname},
+            avatar = #{avatar},
+            gender = #{gender},
+            city = #{city},
+            province = #{province},
+            country = #{country},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+</mapper>
