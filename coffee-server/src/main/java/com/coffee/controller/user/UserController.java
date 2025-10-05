@@ -1,5 +1,6 @@
 package com.coffee.controller.user;
 
+import com.coffee.context.BaseContext;
 import com.coffee.dto.UserLoginDTO;
 import com.coffee.properties.JwtProperties;
 import com.coffee.result.Result;
@@ -40,12 +41,13 @@ public class UserController {
         }
     }
 
+
     @GetMapping("/info")
     @ApiOperation("获取用户信息")
-    public Result<UserLoginVO> getUserInfo(HttpServletRequest request) {
+    public Result<UserLoginVO> getUserInfo() {
         try {
-            // 从token中获取用户ID
-            Long userId = getCurrentUserId(request);
+            // 从BaseContext中获取用户ID
+            Long userId = BaseContext.getCurrentId();
             log.info("获取用户信息，用户ID: {}", userId);
             UserLoginVO userInfo = userService.getUserInfo(userId);
             return Result.success(userInfo);
@@ -54,6 +56,8 @@ public class UserController {
             return Result.error("获取用户信息失败：" + e.getMessage());
         }
     }
+
+// 删除原来的getCurrentUserId方法
     
     /**
      * 从请求中获取当前用户ID

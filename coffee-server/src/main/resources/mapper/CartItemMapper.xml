@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coffee.mapper.CartItemMapper">
+
+    <!-- 根据用户ID查询购物车列表 -->
+    <select id="selectByUserId" resultType="com.coffee.vo.CartItemVO">
+        SELECT
+            ci.id,
+            ci.user_id AS userId,
+            ci.product_id AS productId,
+            p.name AS productName,
+            p.image AS productImage,
+            p.price AS productPrice,
+            ci.quantity,
+            (p.price * ci.quantity) AS subtotal,
+            ci.create_time AS createTime,
+            ci.update_time AS updateTime
+        FROM cart_items ci
+                 LEFT JOIN products p ON ci.product_id = p.id
+        WHERE ci.user_id = #{userId}
+        ORDER BY ci.create_time DESC
+    </select>
+
+    <!-- 根据用户ID和商品ID查询购物车项 -->
+    <select id="selectByUserIdAndProductId" resultType="com.coffee.entity.CartItem">
+        SELECT
+            id,
+            user_id AS userId,
+            product_id AS productId,
+            quantity,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM cart_items
+        WHERE user_id = #{userId} AND product_id = #{productId}
+    </select>
+
+    <!-- 插入购物车项 -->
+    <insert id="insert" parameterType="com.coffee.entity.CartItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO cart_items (user_id, product_id, quantity, create_time, update_time)
+        VALUES (#{userId}, #{productId}, #{quantity}, #{createTime}, #{updateTime})
+    </insert>
+
+    <!-- 更新购物车项 -->
+    <update id="update" parameterType="com.coffee.entity.CartItem">
+        UPDATE cart_items
+        SET quantity = #{quantity}, update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除购物车项 -->
+    <delete id="deleteById">
+        DELETE FROM cart_items WHERE id = #{id}
+    </delete>
+
+    <!-- 根据用户ID和商品ID删除购物车项 -->
+    <delete id="deleteByUserIdAndProductId">
+        DELETE FROM cart_items
+        WHERE user_id = #{userId} AND product_id = #{productId}
+    </delete>
+
+    <!-- 根据用户ID清空购物车 -->
+    <delete id="deleteByUserId">
+        DELETE FROM cart_items WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 根据用户ID统计购物车商品数量 -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM cart_items WHERE user_id = #{userId}
+    </select>
+
+</mapper>
