@@ -4,9 +4,7 @@ import com.coffee.dto.ProductDTO;
 import com.coffee.dto.ProductPageQueryDTO;
 import com.coffee.result.PageResult;
 import com.coffee.result.Result;
-import com.coffee.service.CategoryService;
 import com.coffee.service.ProductService;
-import com.coffee.vo.CategoryVO;
 import com.coffee.vo.ProductVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -131,43 +129,5 @@ public class ProductController {
         log.info("根据分类ID查询商品列表: {}", categoryId);
         List<ProductVO> productVOList = productService.listByCategoryId(categoryId);
         return Result.success(productVOList);
-    }
-}
-
-/**
- * 分类管理接口
- */
-@RestController
-@RequestMapping("/admin/categories")
-@Api(tags = "分类管理接口")
-@Slf4j
-class CategoryController {
-    
-    @Autowired
-    private CategoryService categoryService;
-    
-    /**
-     * 获取所有分类
-     * @return 分类列表
-     */
-    @GetMapping
-    @ApiOperation("获取所有分类")
-    public Result<List<CategoryVO>> getAllCategories() {
-        log.info("获取所有分类");
-        List<CategoryVO> categories = categoryService.getEnabledCategories();
-        return Result.success(categories);
-    }
-
-    /**
-     * 根据ID查询分类
-     * @param id 分类ID
-     * @return 分类详情
-     */
-    @GetMapping("/{id}")
-    @ApiOperation("根据ID查询分类")
-    public Result<CategoryVO> getById(@PathVariable Long id) {
-        log.info("根据ID查询分类: {}", id);
-        CategoryVO categoryVO = categoryService.getById(id);
-        return Result.success(categoryVO);
     }
 }
