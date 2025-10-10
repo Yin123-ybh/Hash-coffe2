@@ -89,4 +89,9 @@
         UPDATE products SET status = #{status}, update_time = NOW() WHERE id = #{id}
     </update>
 
+    <!-- 统计总商品数 -->
+    <select id="countTotalProducts" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM products WHERE status = 1
+    </select>
+
 </mapper>

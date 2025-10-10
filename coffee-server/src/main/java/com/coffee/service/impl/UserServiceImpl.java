@@ -1,13 +1,19 @@
 package com.coffee.service.impl;
 
 import com.coffee.dto.UserLoginDTO;
+import com.coffee.dto.UserPageQueryDTO;
 import com.coffee.entity.User;
 import com.coffee.mapper.UserMapper;
 import com.coffee.properties.JwtProperties;
+import com.coffee.result.PageResult;
 import com.coffee.service.UserService;
 import com.coffee.utils.JwtUtil;
 import com.coffee.utils.WeChatUtil;
 import com.coffee.vo.UserLoginVO;
+import com.coffee.vo.UserVO;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,5 +129,34 @@ public class UserServiceImpl implements UserService {
             .province(user.getProvince())
             .country(user.getCountry())
             .build();
+    }
+
+    @Override
+    public PageResult pageQuery(UserPageQueryDTO userPageQueryDTO) {
+        PageHelper.startPage(userPageQueryDTO.getPage(), userPageQueryDTO.getPageSize());
+        Page<UserVO> page = (Page<UserVO>) userMapper.pageQuery(userPageQueryDTO);
+        return new PageResult(page.getTotal(), page.getResult());
+    }
+
+    @Override
+    public UserVO getById(Long id) {
+        User user = userMapper.getById(id);
+        if (user == null) {
+            return null;
+        }
+        
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        
+        // 这里可以添加额外的统计信息查询
+        // userVO.setOrderCount(orderMapper.countByUserId(id));
+        // userVO.setTotalSpent(orderMapper.sumAmountByUserId(id));
+        
+        return userVO;
+    }
+
+    @Override
+    public void updateStatus(Long id, Integer status) {
+        userMapper.updateStatus(id, status);
     }
 }

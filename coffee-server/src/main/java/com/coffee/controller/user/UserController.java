@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-@RestController
+@RestController("userUserController")
 @RequestMapping("/user")
 @Api(tags = "用户管理接口")
 @Slf4j

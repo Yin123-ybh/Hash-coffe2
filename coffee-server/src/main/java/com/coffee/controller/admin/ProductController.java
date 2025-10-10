@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * 商品管理接口
  */
-@RestController
+@RestController("adminProductController")
 @RequestMapping("/admin/products")
 @Api(tags = "商品管理接口")
 @Slf4j

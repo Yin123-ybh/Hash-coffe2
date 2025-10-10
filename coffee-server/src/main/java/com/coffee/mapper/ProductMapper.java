@@ -61,4 +61,10 @@ public interface ProductMapper {
      * @param id 商品ID
      */
     void updateStatus(@Param("status") Integer status, @Param("id") Long id);
+    
+    /**
+     * 统计总商品数
+     * @return 总商品数
+     */
+    Long countTotalProducts();
 }
