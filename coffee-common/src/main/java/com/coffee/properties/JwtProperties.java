@@ -8,33 +8,20 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "coffee.jwt")
 public class JwtProperties {
-    /**
-     * 管理员JWT签名密钥
-     */
+    
     private String adminSecretKey;
-    
-    /**
-     * 管理员JWT过期时间(毫秒)
-     */
-    private Long adminTtl;
-    
-    /**
-     * 管理员令牌名称
-     */
     private String adminTokenName;
-    
-    /**
-     * 用户令牌名称
-     */
-    private String userTokenName;
-    
-    /**
-     * 用户JWT签名密钥
-     */
     private String userSecretKey;
+    private String userTokenName;
+    private Integer adminTtl;
+    private Integer userTtl;
     
-    /**
-     * 用户JWT过期时间(毫秒)
-     */
-    private Long userTtl;
+    // 添加getter方法别名以保持兼容性
+    public Integer getUserTtl() {
+        return userTtl;
+    }
+    
+    public Integer getAdminTtl() {
+        return adminTtl;
+    }
 }

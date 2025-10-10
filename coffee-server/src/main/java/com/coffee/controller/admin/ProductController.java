@@ -61,7 +61,7 @@ public class ProductController {
      */
     @PostMapping
     @ApiOperation("新增商品")
-    public Result<ProductVO> save(@Valid@RequestBody ProductDTO productDTO) {
+    public Result<ProductVO> save(@Valid @RequestBody ProductDTO productDTO) {
         log.info("新增商品: {}", productDTO);
         ProductVO productVO = productService.save(productDTO);
         return Result.success(productVO);

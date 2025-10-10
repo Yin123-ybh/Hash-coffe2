@@ -1,4 +1,3 @@
-// AliOssProperties.java
 package com.coffee.properties;
 
 import lombok.Data;
@@ -9,6 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "coffee.alioss")
 public class AliOssProperties {
+    
     private String endpoint;
     private String accessKeyId;
     private String accessKeySecret;
