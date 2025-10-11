@@ -15,13 +15,4 @@ public class JwtProperties {
     private String userTokenName;
     private Integer adminTtl;
     private Integer userTtl;
-    
-    // 添加getter方法别名以保持兼容性
-    public Integer getUserTtl() {
-        return userTtl;
-    }
-    
-    public Integer getAdminTtl() {
-        return adminTtl;
-    }
 }

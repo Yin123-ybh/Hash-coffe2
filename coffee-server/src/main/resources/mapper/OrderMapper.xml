@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coffee.mapper.OrderMapper">
+
+    <!-- 插入订单 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (order_no, user_id, address_id, total_amount, discount_amount, pay_amount,
+                            status, pay_method, pay_time, remark, create_time, update_time)
+        VALUES (#{orderNo}, #{userId}, #{addressId}, #{totalAmount}, #{discountAmount}, #{payAmount},
+                #{status}, #{payMethod}, #{payTime}, #{remark}, #{createTime}, #{updateTime})
+    </insert>
+
+    <!-- 插入订单项 -->
+    <insert id="insertItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_items (
+            order_id, product_id, product_name, product_image,
+            price, quantity, total_price
+        ) VALUES (
+            #{orderId}, #{productId}, #{productName}, #{productImage},
+            #{price}, #{quantity}, #{totalPrice}
+        )
+    </insert>
+
+    <!-- 分页查询订单 -->
+    <select id="pageQuery" resultType="com.coffee.vo.OrderVO">
+        SELECT
+        o.id,
+        o.order_no AS orderNo,
+        o.user_id AS userId,
+        o.address_id AS addressId,
+        o.total_amount AS totalAmount,
+        o.discount_amount AS discountAmount,
+        o.pay_amount AS payAmount,
+        o.status,
+        o.pay_method AS payMethod,
+        o.pay_time AS payTime,
+        o.remark,
+        o.create_time AS createTime,
+        o.update_time AS updateTime
+        FROM orders o
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                AND o.order_no LIKE CONCAT('%', #{orderNo}, '%')
+            </if>
+            <if test="status != null">
+                AND o.status = #{status}
+            </if>
+            <if test="beginTime != null and beginTime != ''">
+                AND o.create_time >= #{beginTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND o.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY o.create_time DESC
+    </select>
+
+    <!-- 根据ID查询订单详情 -->
+    <select id="selectById" resultType="com.coffee.vo.OrderVO">
+        SELECT
+            o.id,
+            o.order_no AS orderNo,
+            o.user_id AS userId,
+            o.address_id AS addressId,
+            o.total_amount AS totalAmount,
+            o.discount_amount AS discountAmount,
+            o.pay_amount AS payAmount,
+            o.status,
+            o.pay_method AS payMethod,
+            o.pay_time AS payTime,
+            o.remark,
+            o.create_time AS createTime,
+            o.update_time AS updateTime
+        FROM orders o
+        WHERE o.id = #{id}
+    </select>
+
+    <!-- 根据订单ID查询订单项 -->
+    <select id="selectItemsByOrderId" resultType="com.coffee.vo.OrderItemVO">
+        SELECT
+            oi.id,
+            oi.order_id AS orderId,
+            oi.product_id AS productId,
+            oi.product_name AS productName,
+            oi.product_image AS productImage,
+            oi.price,
+            oi.quantity,
+            oi.total_price AS totalPrice
+        FROM order_items oi
+        WHERE oi.order_id = #{orderId}
+        ORDER BY oi.id
+    </select>
+
+    <!-- 更新订单状态 -->
+    <update id="updateStatus">
+        UPDATE orders
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 取消订单 -->
+    <update id="cancel">
+        UPDATE orders
+        SET status = 5, update_time = NOW()
+        WHERE id = #{id} AND status IN (1, 2)
+    </update>
+    <!-- 更新支付时间 -->
+    <update id="updatePayTime">
+        UPDATE orders
+        SET pay_time = #{payTime}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+    <!-- 统计总订单数 -->
+    <select id="countTotalOrders" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM orders
+    </select>
+
+    <!-- 统计总营业额 -->
+    <select id="sumTotalRevenue" resultType="java.lang.Double">
+        SELECT COALESCE(SUM(pay_amount), 0) FROM orders WHERE status IN (2, 3, 4)
+    </select>
+
+</mapper>
