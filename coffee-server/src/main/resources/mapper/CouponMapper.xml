@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coffee.mapper.CouponMapper">
+
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO coupons (name, type, discount_amount, discount_rate, min_amount,
+                             total_count, used_count, start_time, end_time, status,
+                             create_time, update_time)
+        VALUES (#{name}, #{type}, #{discountAmount}, #{discountRate}, #{minAmount},
+                #{totalCount}, #{usedCount}, #{startTime}, #{endTime}, #{status},
+                #{createTime}, #{updateTime})
+    </insert>
+    <update id="update">
+        update coupons
+        set name = #{name},
+            type = #{type},
+            discount_amount = #{discountAmount},
+            discount_rate = #{discountRate},
+            min_amount = #{minAmount},
+            total_count = #{totalCount},
+            used_count = #{usedCount},
+            start_time = #{startTime},
+            end_time = #{endTime},
+            status = #{status},
+            update_time = #{updateTime}
+        where id = #{id}
+    </update>
+    <!-- 分页查询优惠券 -->
+    <select id="pageQuery" resultType="com.coffee.vo.CouponVO">
+        SELECT
+        c.id,
+        c.name,
+        c.type,
+        c.discount_amount AS discountAmount,
+        c.discount_rate AS discountRate,
+        c.min_amount AS minAmount,
+        c.total_count AS totalCount,
+        c.used_count AS usedCount,
+        c.start_time AS startTime,
+        c.end_time AS endTime,
+        c.status,
+        c.create_time AS createTime,
+        c.update_time AS updateTime
+        FROM coupons c
+        <where>
+            <if test="name != null and name != ''">
+                AND c.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="type != null">
+                AND c.type = #{type}
+            </if>
+            <if test="status != null">
+                AND c.status = #{status}
+            </if>
+        </where>
+        ORDER BY c.create_time DESC
+    </select>
+    <!-- 根据ID查询优惠券 -->
+    <select id="selectById" resultType="com.coffee.vo.CouponVO">
+        SELECT
+            c.id,
+            c.name,
+            c.type,
+            c.discount_amount AS discountAmount,
+            c.discount_rate AS discountRate,
+            c.min_amount AS minAmount,
+            c.total_count AS totalCount,
+            c.used_count AS usedCount,
+            c.start_time AS startTime,
+            c.end_time AS endTime,
+            c.status,
+            c.create_time AS createTime,
+            c.update_time AS updateTime
+        FROM coupons c
+        WHERE c.id = #{id}
+    </select>
+
+    <!-- 更新优惠券状态 -->
+    <update id="updateStatus">
+        UPDATE coupons
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>
