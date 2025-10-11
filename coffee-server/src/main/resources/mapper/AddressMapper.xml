@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coffee.mapper.AddressMapper">
+
+    <!-- 根据用户ID查询地址列表 -->
+    <select id="selectByUserId" resultType="com.coffee.vo.AddressVO">
+        SELECT
+            id,
+            user_id AS userId,
+            name,
+            phone,
+            province,
+            city,
+            district,
+            address,
+            is_default AS isDefault,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM addresses
+        WHERE user_id = #{userId}
+        ORDER BY is_default DESC, create_time DESC
+    </select>
+
+    <!-- 根据ID查询地址详情 -->
+    <select id="selectById" resultType="com.coffee.vo.AddressVO">
+        SELECT
+            id,
+            user_id AS userId,
+            name,
+            phone,
+            province,
+            city,
+            district,
+            address,
+            is_default AS isDefault,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM addresses
+        WHERE id = #{id}
+    </select>
+
+    <!-- 插入地址 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO addresses (
+            user_id, name, phone, province, city, district, address, is_default,
+            create_time, update_time
+        ) VALUES (
+            #{userId}, #{name}, #{phone}, #{province}, #{city}, #{district}, #{address}, #{isDefault},
+            #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 更新地址 -->
+    <update id="update">
+        UPDATE addresses
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="phone != null and phone != ''">phone = #{phone},</if>
+            <if test="province != null and province != ''">province = #{province},</if>
+            <if test="city != null and city != ''">city = #{city},</if>
+            <if test="district != null and district != ''">district = #{district},</if>
+            <if test="address != null and address != ''">address = #{address},</if>
+            <if test="isDefault != null">is_default = #{isDefault},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除地址 -->
+    <delete id="deleteById">
+        DELETE FROM addresses WHERE id = #{id}
+    </delete>
+
+    <!-- 设置默认地址 -->
+    <update id="setDefault">
+        UPDATE addresses
+        SET is_default = 1, update_time = NOW()
+        WHERE id = #{id} AND user_id = #{userId}
+    </update>
+
+    <!-- 取消用户所有地址的默认状态 -->
+    <update id="cancelAllDefault">
+        UPDATE addresses
+        SET is_default = 0, update_time = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 查询用户默认地址 -->
+    <select id="selectDefaultByUserId" resultType="com.coffee.vo.AddressVO">
+        SELECT
+            id,
+            user_id AS userId,
+            name,
+            phone,
+            province,
+            city,
+            district,
+            address,
+            is_default AS isDefault,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM addresses
+        WHERE user_id = #{userId} AND is_default = 1
+        LIMIT 1
+    </select>
+
+</mapper>
