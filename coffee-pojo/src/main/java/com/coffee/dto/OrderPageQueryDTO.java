@@ -13,6 +13,7 @@ public class OrderPageQueryDTO implements Serializable {
 
     private int page = 1;
     private int pageSize = 10;
+    private Long userId;
     private String orderNo;
     private Integer status;
     private String beginTime;

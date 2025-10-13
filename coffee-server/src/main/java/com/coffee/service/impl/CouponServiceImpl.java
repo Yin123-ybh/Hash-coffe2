@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -154,6 +155,16 @@ public class CouponServiceImpl implements CouponService {
         log.info("优惠券删除成功");
     }
     /**
+     * 获取可用优惠券列表
+     * @return 可用优惠券列表
+     */
+    @Override
+    public List<CouponVO> getAvailableCoupons() {
+        log.info("获取可用优惠券列表");
+        return couponMapper.getAvailableCoupons();  // ✅ 调用Mapper方法
+    }
+
+    /**
      * 验证优惠券数据
      * @param couponDTO 优惠券信息
      */
@@ -184,4 +195,5 @@ public class CouponServiceImpl implements CouponService {
             }
         }
     }
+
 }

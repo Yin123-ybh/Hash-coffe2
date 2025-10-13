@@ -6,6 +6,7 @@ import com.coffee.vo.CouponVO;
 import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import java.util.List;
 
 /**
  * 优惠券数据访问接口
@@ -51,4 +52,17 @@ public interface CouponMapper {
      * @param status 状态
      */
     void updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    /**
+     * 获取可用优惠券列表
+     * @return 可用优惠券列表
+     */
+    List<CouponVO> getAvailableCoupons();
+
+    /**
+     * 更新优惠券已使用数量
+     * @param id 优惠券ID
+     * @param usedCount 已使用数量
+     */
+    void updateUsedCount(@Param("id") Long id, @Param("usedCount") Integer usedCount);
 }

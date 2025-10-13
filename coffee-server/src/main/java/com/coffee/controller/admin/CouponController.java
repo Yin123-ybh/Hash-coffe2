@@ -105,4 +105,15 @@ public class CouponController {
         couponService.deleteById(id);
         return Result.success();
     }
+    /**
+     * 获取可用优惠券列表（公共接口）
+     * @return 可用优惠券列表
+     */
+    @GetMapping("/available")
+    @ApiOperation("获取可用优惠券列表")
+    public Result<List<CouponVO>> getAvailableCoupons() {
+        log.info("获取可用优惠券列表");
+        List<CouponVO> list = couponService.getAvailableCoupons();
+        return Result.success(list);
+    }
 }

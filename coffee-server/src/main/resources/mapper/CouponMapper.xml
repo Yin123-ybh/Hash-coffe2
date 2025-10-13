@@ -82,5 +82,31 @@
         SET status = #{status}, update_time = NOW()
         WHERE id = #{id}
     </update>
+    <!-- 获取可用优惠券列表 -->
+    <select id="getAvailableCoupons" resultType="com.coffee.vo.CouponVO">
+        SELECT
+            c.id,
+            c.name,
+            c.type,
+            c.discount_amount AS discountAmount,
+            c.discount_rate AS discountRate,
+            c.min_amount AS minAmount,
+            c.total_count AS totalCount,
+            c.used_count AS usedCount,
+            c.start_time AS startTime,
+            c.end_time AS endTime,
+            c.status,
+            c.create_time AS createTime,
+            c.update_time AS updateTime
+        FROM coupons c
+        WHERE c.status = 1
+        ORDER BY c.create_time DESC
+    </select>
 
+    <!-- 更新优惠券已使用数量 -->
+    <update id="updateUsedCount">
+        UPDATE coupons
+        SET used_count = #{usedCount}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
 </mapper>

@@ -4,6 +4,7 @@ import com.coffee.dto.CouponDTO;
 import com.coffee.dto.CouponPageQueryDTO;
 import com.coffee.result.PageResult;
 import com.coffee.vo.CouponVO;
+import java.util.List;
 
 /**
  * 优惠券业务接口
@@ -48,4 +49,11 @@ public interface CouponService {
      * @param id 优惠券ID
      */
     void deleteById(Long id);
+    /**
+     * 获取可用优惠券列表（公共接口）
+     * @return 可用优惠券列表
+     */
+    List<CouponVO> getAvailableCoupons();
+
+
 }

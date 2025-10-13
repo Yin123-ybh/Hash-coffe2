@@ -24,6 +24,8 @@ public class OrderCreateDTO implements Serializable {
     private Long addressId;
 
     private Long couponId;
+    
+    private Long userCouponId;
 
     private String remark;
 

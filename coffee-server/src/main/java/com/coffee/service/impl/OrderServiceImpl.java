@@ -35,10 +35,24 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public PageResult pageQuery(OrderPageQueryDTO orderPageQueryDTO) {
+        // 检查是否是管理端请求（通过userId是否为null判断）
+        // 如果userId为null，说明是管理端请求，不设置用户过滤
+        // 如果userId不为null，说明是用户端请求，设置用户过滤
+        if (orderPageQueryDTO.getUserId() == null) {
+            // 管理端请求，不设置用户过滤，显示所有订单
+        } else {
+            // 用户端请求，设置当前用户ID，确保只查询当前用户的订单
+            Long currentUserId = BaseContext.getCurrentId();
+            orderPageQueryDTO.setUserId(currentUserId);
+        }
+        
         PageHelper.startPage(orderPageQueryDTO.getPage(), orderPageQueryDTO.getPageSize());
         Page<OrderVO> page = (Page<OrderVO>) orderMapper.pageQuery(orderPageQueryDTO);
         
         for (OrderVO order : page.getResult()) {
+            // 加载订单项
+            List<OrderItemVO> items = orderMapper.selectItemsByOrderId(order.getId());
+            order.setItems(items);
             order.setStatusText(getStatusText(order.getStatus()));
             order.setPayMethodText(getPayMethodText(order.getPayMethod()));
         }
@@ -91,23 +105,32 @@ public class OrderServiceImpl implements OrderService {
             orderItems.add(orderItem);
         }
         
-        // 3. 创建订单
+        // 3. 计算优惠金额
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        if (orderCreateDTO.getUserCouponId() != null) {
+            // 这里可以添加优惠券处理逻辑
+            // 暂时使用前端传递的totalAmount作为实付金额
+            discountAmount = totalAmount.subtract(orderCreateDTO.getTotalAmount());
+        }
+        
+        // 4. 创建订单
         OrderVO orderVO = OrderVO.builder()
             .orderNo(orderNo)
             .userId(BaseContext.getCurrentId())
             .addressId(orderCreateDTO.getAddressId())
             .totalAmount(totalAmount)
-            .payAmount(totalAmount) // 暂时没有优惠券，实付金额等于总金额
+            .discountAmount(discountAmount)
+            .payAmount(orderCreateDTO.getTotalAmount()) // 使用前端计算的实付金额
             .status(1) // 待支付
             .remark(orderCreateDTO.getRemark())
             .createTime(LocalDateTime.now())
             .updateTime(LocalDateTime.now())
             .build();
         
-        // 4. 保存订单
+        // 5. 保存订单
         orderMapper.insert(orderVO);
         
-        // 5. 保存订单项
+        // 6. 保存订单项
         for (OrderItemVO item : orderItems) {
             item.setOrderId(orderVO.getId());
             orderMapper.insertItem(item);
@@ -143,6 +166,9 @@ public class OrderServiceImpl implements OrderService {
      * 获取状态文本
      */
     private String getStatusText(Integer status) {
+        if (status == null) {
+            return "未知";
+        }
         String[] statusTexts = {"", "待支付", "已支付", "制作中", "已完成", "已取消"};
         return status >= 1 && status <= 5 ? statusTexts[status] : "未知";
     }
@@ -151,6 +177,9 @@ public class OrderServiceImpl implements OrderService {
      * 获取支付方式文本
      */
     private String getPayMethodText(Integer payMethod) {
+        if (payMethod == null) {
+            return "未支付";
+        }
         String[] methodTexts = {"", "微信支付", "支付宝", "余额支付"};
         return payMethod >= 1 && payMethod <= 3 ? methodTexts[payMethod] : "未支付";
     }
