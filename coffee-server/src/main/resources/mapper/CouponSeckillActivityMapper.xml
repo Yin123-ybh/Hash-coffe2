@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.coffee.mapper.CouponSeckillActivityMapper">
+    <!-- 插入优惠券秒杀活动 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into coupon_seckill_activity (
+           name, description, coupon_id, seckill_stock,
+           per_user_limit, start_time, end_time, status,
+           create_time, update_time
+        )
+        values (
+           #{name}, #{description}, #{couponId}, #{seckillStock},
+           #{perUserLimit}, #{startTime}, #{endTime}, #{status},
+           #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <!-- 根据ID查询活动 -->
+    <select id="selectById" resultType="com.coffee.vo.CouponSeckillActivityVO">
+        SELECT
+            csa.id, csa.name, csa.description, csa.coupon_id AS couponId,
+            c.name AS couponName, c.type AS couponType, c.discount_amount AS discountAmount,
+            c.discount_rate AS discountRate, c.min_amount AS minAmount,
+            csa.seckill_stock AS seckillStock, csa.per_user_limit AS perUserLimit,
+            csa.start_time AS startTime, csa.end_time AS endTime, csa.status,
+            CASE csa.status
+                WHEN 0 THEN '未开始'
+                WHEN 1 THEN '进行中'
+                WHEN 2 THEN '已结束'
+                WHEN 3 THEN '已取消'
+                END AS statusText,
+            csa.create_time AS createTime
+        FROM coupon_seckill_activity csa
+                 LEFT JOIN coupons c ON csa.coupon_id = c.id
+        WHERE csa.id = #{id}
+    </select>
+
+    <!-- 查询进行中的活动列表 -->
+    <select id="selectActiveActivities" resultType="com.coffee.vo.CouponSeckillActivityVO">
+        SELECT csa.id,
+               csa.name,
+               csa.description,
+               csa.coupon_id      AS couponId,
+               c.name             AS couponName,
+               c.type             AS couponType,
+               c.discount_amount  AS discountAmount,
+               c.discount_rate    AS discountRate,
+               c.min_amount       AS minAmount,
+               csa.seckill_stock  AS seckillStock,
+               csa.per_user_limit AS perUserLimit,
+               csa.start_time     AS startTime,
+               csa.end_time       AS endTime,
+               csa.status,
+               CASE csa.status
+                   WHEN 0 THEN '未开始'
+                   WHEN 1 THEN '进行中'
+                   WHEN 2 THEN '已结束'
+                   WHEN 3 THEN '已取消'
+                   END            AS statusText,
+               csa.create_time    AS createTime
+        FROM coupon_seckill_activity csa
+                 LEFT JOIN coupons c ON csa.coupon_id = c.id
+        WHERE csa.status IN (0, 1)
+          AND csa.start_time &lt;= #{now}
+          AND csa.end_time &gt;= #{now}
+        ORDER BY csa.start_time
+    </select>
+
+    <!-- 更新活动状态 -->
+    <update id="updateStatus">
+        UPDATE coupon_seckill_activity
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 扣减秒杀库存 -->
+    <update id="decreaseSeckillStock">
+        UPDATE coupon_seckill_activity
+        SET seckill_stock = seckill_stock - #{quantity}, update_time = NOW()
+        WHERE id = #{id} AND seckill_stock >= #{quantity}
+    </update>
+
+    <!-- 检查用户是否已参与 -->
+    <select id="checkUserParticipated" resultType="int">
+        SELECT COUNT(*)
+        FROM coupon_seckill_participant
+        WHERE activity_id = #{activityId} AND user_id = #{userId}
+    </select>
+
+    <!-- 分页查询活动列表 -->
+    <select id="selectActivitiesPage" resultType="com.coffee.vo.CouponSeckillActivityVO">
+        SELECT csa.id,
+               csa.name,
+               csa.description,
+               csa.coupon_id      AS couponId,
+               c.name             AS couponName,
+               c.type             AS couponType,
+               c.discount_amount  AS discountAmount,
+               c.discount_rate    AS discountRate,
+               c.min_amount       AS minAmount,
+               csa.seckill_stock  AS seckillStock,
+               csa.per_user_limit AS perUserLimit,
+               csa.start_time     AS startTime,
+               csa.end_time       AS endTime,
+               csa.status,
+               CASE csa.status
+                   WHEN 0 THEN '未开始'
+                   WHEN 1 THEN '进行中'
+                   WHEN 2 THEN '已结束'
+                   WHEN 3 THEN '已取消'
+                   END            AS statusText,
+               csa.create_time    AS createTime
+        FROM coupon_seckill_activity csa
+                 LEFT JOIN coupons c ON csa.coupon_id = c.id
+        <where>
+            <if test="pageQuery.name != null and pageQuery.name != ''">
+                AND csa.name LIKE CONCAT('%', #{pageQuery.name}, '%')
+            </if>
+            <if test="pageQuery.status != null">
+                AND csa.status = #{pageQuery.status}
+            </if>
+            <if test="pageQuery.couponId != null">
+                AND csa.coupon_id = #{pageQuery.couponId}
+            </if>
+        </where>
+        ORDER BY csa.create_time DESC
+        LIMIT #{pageQuery.pageSize} OFFSET ${(pageQuery.page - 1) * pageQuery.pageSize}
+    </select>
+
+    <!-- 统计活动总数 -->
+    <select id="countActivities" resultType="long">
+        SELECT COUNT(*)
+        FROM coupon_seckill_activity csa
+        <where>
+            <if test="pageQuery.name != null and pageQuery.name != ''">
+                AND csa.name LIKE CONCAT('%', #{pageQuery.name}, '%')
+            </if>
+            <if test="pageQuery.status != null">
+                AND csa.status = #{pageQuery.status}
+            </if>
+            <if test="pageQuery.couponId != null">
+                AND csa.coupon_id = #{pageQuery.couponId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 更新活动 -->
+    <update id="updateActivity">
+        UPDATE coupon_seckill_activity
+        SET name = #{activity.name},
+            description = #{activity.description},
+            coupon_id = #{activity.couponId},
+            seckill_stock = #{activity.seckillStock},
+            per_user_limit = #{activity.perUserLimit},
+            start_time = #{activity.startTime},
+            end_time = #{activity.endTime},
+            update_time = NOW()
+        WHERE id = #{activity.id}
+    </update>
+
+    <!-- 删除活动 -->
+    <delete id="deleteActivity">
+        DELETE FROM coupon_seckill_activity WHERE id = #{id}
+    </delete>
+
+    <!-- 获取活动统计信息 -->
+    <select id="selectActivityStats" resultType="com.coffee.vo.CouponSeckillStatsVO">
+        SELECT csa.id AS activityId,
+               csa.name AS activityName,
+               csa.seckill_stock AS totalStock,
+               csa.seckill_stock - COALESCE(SUM(CASE WHEN csp.status = 1 THEN csp.quantity ELSE 0 END), 0) AS remainingStock,
+               COUNT(DISTINCT csp.user_id) AS participantCount,
+               COALESCE(SUM(CASE WHEN csp.status = 1 THEN csp.quantity ELSE 0 END), 0) AS successCount,
+               COALESCE(SUM(CASE WHEN csp.status = 2 THEN csp.quantity ELSE 0 END), 0) AS failCount,
+               CASE 
+                   WHEN COUNT(csp.id) > 0 THEN 
+                       CONCAT(ROUND(SUM(CASE WHEN csp.status = 1 THEN csp.quantity ELSE 0 END) * 100.0 / COUNT(csp.id), 2), '%')
+                   ELSE '0%'
+               END AS successRate
+        FROM coupon_seckill_activity csa
+        LEFT JOIN coupon_seckill_participant csp ON csa.id = csp.activity_id
+        WHERE csa.id = #{id}
+        GROUP BY csa.id, csa.name, csa.seckill_stock
+    </select>
+
+    <!-- 获取活动参与记录 -->
+    <select id="selectParticipants" resultType="com.coffee.vo.CouponSeckillParticipantVO">
+        SELECT csp.id,
+               csp.activity_id AS activityId,
+               csp.user_id AS userId,
+               u.nickname AS userName,
+               csp.quantity,
+               csp.status,
+               CASE csp.status
+                   WHEN 0 THEN '待处理'
+                   WHEN 1 THEN '成功'
+                   WHEN 2 THEN '失败'
+                   END AS statusText,
+               csp.user_coupon_id AS userCouponId,
+               csp.create_time AS createTime
+        FROM coupon_seckill_participant csp
+        LEFT JOIN users u ON csp.user_id = u.id
+        WHERE csp.activity_id = #{activityId}
+        ORDER BY csp.create_time DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 统计参与记录总数 -->
+    <select id="countParticipants" resultType="long">
+        SELECT COUNT(*)
+        FROM coupon_seckill_participant
+        WHERE activity_id = #{activityId}
+    </select>
+
+</mapper>

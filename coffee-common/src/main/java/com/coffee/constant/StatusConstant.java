@@ -17,4 +17,15 @@ public class StatusConstant {
     public static final Integer USER_COUPON_STATUS_UNUSED = 1; // 未使用
     public static final Integer USER_COUPON_STATUS_USED = 2; // 已使用
     public static final Integer USER_COUPON_STATUS_EXPIRED = 3; // 已过期
+
+    // 优惠券秒杀活动状态
+    public static final Integer COUPON_SECKILL_STATUS_NOT_STARTED = 0; // 未开始
+    public static final Integer COUPON_SECKILL_STATUS_ACTIVE = 1; // 进行中
+    public static final Integer COUPON_SECKILL_STATUS_ENDED = 2; // 已结束
+    public static final Integer COUPON_SECKILL_STATUS_CANCELLED = 3; // 已取消
+
+    // 优惠券秒杀参与状态
+    public static final Integer COUPON_SECKILL_PARTICIPANT_STATUS_PENDING = 0; // 待处理
+    public static final Integer COUPON_SECKILL_PARTICIPANT_STATUS_SUCCESS = 1; // 成功
+    public static final Integer COUPON_SECKILL_PARTICIPANT_STATUS_FAILED = 2; // 失败
 }
