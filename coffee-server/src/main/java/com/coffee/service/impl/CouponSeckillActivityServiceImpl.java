@@ -11,6 +11,7 @@ import com.coffee.mapper.CouponSeckillActivityMapper;
 import com.coffee.mapper.UserCouponMapper;
 import com.coffee.result.PageResult;
 import com.coffee.service.CouponSeckillActivityService;
+import com.coffee.service.CouponSeckillMessageProducer;
 import com.coffee.utils.CouponSeckillRedisUtil;
 import com.coffee.vo.CouponSeckillActivityVO;
 import com.coffee.vo.CouponSeckillParticipantVO;
@@ -34,6 +35,9 @@ public class CouponSeckillActivityServiceImpl implements CouponSeckillActivitySe
     
     @Autowired
     private UserCouponMapper userCouponMapper;
+    
+    @Autowired
+    private CouponSeckillMessageProducer messageProducer;
 
     @Override
     @Transactional
@@ -87,23 +91,53 @@ public class CouponSeckillActivityServiceImpl implements CouponSeckillActivitySe
     }
 
     @Override
-    @Transactional
     public void participateSeckill(Long userId, CouponSeckillParticipateDTO participateDTO) {
-        log.info("用户参与优惠券秒杀，用户ID：{}，活动ID：{}，数量：{}",
+        log.info("用户参与优惠券秒杀（异步），用户ID：{}，活动ID：{}，数量：{}",
                 userId, participateDTO.getActivityId(), participateDTO.getQuantity());
 
-        // 1. 检查活动是否存在
+        // 1. 快速检查活动是否存在（从数据库查询）
         CouponSeckillActivityVO activity = couponSeckillActivityMapper.selectById(participateDTO.getActivityId());
         if (activity == null) {
+            throw new BaseException("优惠券秒杀活动不存在");
+        }
+
+        // 2. 快速检查活动状态和时间
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(activity.getStartTime()) || now.isAfter(activity.getEndTime())) {
+            throw new BaseException("优惠券秒杀活动不在进行中");
+        }
+
+        // 3. 发送消息到RabbitMQ队列（异步处理）
+        log.info("发送秒杀消息到RabbitMQ队列，用户ID：{}，活动ID：{}", userId, participateDTO.getActivityId());
+        messageProducer.sendCouponSeckillMessage(userId, participateDTO);
+        
+        log.info("秒杀请求已提交到消息队列，用户ID：{}，活动ID：{}", userId, participateDTO.getActivityId());
+    }
+
+    /**
+     * 处理秒杀消息（由RabbitMQ消费者调用）
+     * 这个方法执行实际的秒杀逻辑
+     */
+    @Transactional
+    public void processSeckillMessage(Long userId, CouponSeckillParticipateDTO participateDTO) {
+        log.info("开始处理秒杀消息，用户ID：{}，活动ID：{}，数量：{}",
+                userId, participateDTO.getActivityId(), participateDTO.getQuantity());
+
+        // 1. 再次检查活动是否存在
+        CouponSeckillActivityVO activity = couponSeckillActivityMapper.selectById(participateDTO.getActivityId());
+        if (activity == null) {
+            log.error("活动不存在，用户ID：{}，活动ID：{}", userId, participateDTO.getActivityId());
             throw new BaseException("优惠券秒杀活动不存在");
         }
 
         // 2. 检查活动状态和时间
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(activity.getStartTime()) || now.isAfter(activity.getEndTime())) {
+            log.error("活动不在进行中，用户ID：{}，活动ID：{}", userId, participateDTO.getActivityId());
             throw new BaseException("优惠券秒杀活动不在进行中");
         }
-        // 3. 使用Redis Lua脚本执行优惠券秒杀
+
+        // 3. 使用Redis Lua脚本执行优惠券秒杀（原子性操作）
         String stockKey = "coupon_seckill:stock:" + participateDTO.getActivityId();
         String participantsKey = "coupon_seckill:participants:" + participateDTO.getActivityId();
 
@@ -122,6 +156,7 @@ public class CouponSeckillActivityServiceImpl implements CouponSeckillActivitySe
 
         // 4. 处理Lua脚本返回结果
         if (result == null || result.isEmpty()) {
+            log.error("Lua脚本返回结果为空，用户ID：{}，活动ID：{}", userId, participateDTO.getActivityId());
             throw new BaseException("优惠券秒杀执行失败");
         }
 
@@ -151,13 +186,14 @@ public class CouponSeckillActivityServiceImpl implements CouponSeckillActivitySe
                 default:
                     errorMessage = "优惠券秒杀失败";
             }
+            log.error("秒杀失败，用户ID：{}，活动ID：{}，错误：{}", userId, participateDTO.getActivityId(), errorMessage);
             throw new BaseException(errorMessage);
         }
 
         Long remainingStockLong = (Long) result.get(2);
         int remainingStock = remainingStockLong.intValue();
         
-        // 5. 发放优惠券到用户
+        // 5. 发放优惠券到用户（数据库操作）
         try {
             // 发放指定数量的优惠券
             for (int i = 0; i < participateDTO.getQuantity(); i++) {
@@ -174,6 +210,7 @@ public class CouponSeckillActivityServiceImpl implements CouponSeckillActivitySe
         } catch (Exception e) {
             log.error("发放优惠券失败，用户ID：{}，优惠券ID：{}", userId, activity.getCouponId(), e);
             // 这里可以选择是否回滚Redis操作，暂时只记录日志
+            throw new BaseException("发放优惠券失败");
         }
         
         log.info("用户参与优惠券秒杀成功，用户ID：{}，活动ID：{}，剩余库存：{}",

@@ -3,6 +3,7 @@ package com.coffee.controller.user;
 
 import com.coffee.context.BaseContext;
 import com.coffee.dto.CouponSeckillParticipateDTO;
+import com.coffee.exception.BaseException;
 import com.coffee.result.Result;
 import com.coffee.service.CouponSeckillActivityService;
 import com.coffee.vo.CouponSeckillActivityVO;
@@ -40,11 +41,20 @@ public class CouponSeckillController {
     }
 
     @PostMapping("/participate")
-    @ApiOperation("参与优惠券秒杀")
-    public Result<Void> participateSeckill(@RequestBody CouponSeckillParticipateDTO participateDTO) {
+    @ApiOperation("参与优惠券秒杀（异步处理）")
+    public Result<String> participateSeckill(@RequestBody CouponSeckillParticipateDTO participateDTO) {
         log.info("用户参与优惠券秒杀：{}", participateDTO);
         Long userId = BaseContext.getCurrentId();
-        couponSeckillActivityService.participateSeckill(userId, participateDTO);
-        return Result.success();
+        
+        try {
+            // 快速检查并发送消息到队列
+            couponSeckillActivityService.participateSeckill(userId, participateDTO);
+            
+            // 立即返回成功，告诉用户请求已提交
+            return Result.success("秒杀请求已提交，正在处理中，请稍后查看优惠券");
+        } catch (BaseException e) {
+            // 如果快速检查失败（如活动不存在、已结束等），立即返回错误
+            return Result.error(e.getMessage());
+        }
     }
 }
