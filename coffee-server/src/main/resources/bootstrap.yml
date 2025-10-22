@@ -1,0 +1,29 @@
+# Nacos 服务注册发现配置
+spring:
+  application:
+    name: coffee-server
+  cloud:
+    nacos:
+      # 服务注册发现配置
+      discovery:
+        server-addr: localhost:8848
+        namespace: public
+        group: DEFAULT_GROUP
+        metadata:
+          version: 1.0.0
+          region: beijing
+          zone: zone1
+        # 服务实例配置
+        instance:
+          # 服务实例权重，范围0-1，用于负载均衡
+          weight: 1.0
+          # 是否启用健康检查
+          healthy: true
+          # 服务实例集群名称
+          cluster-name: DEFAULT
+
+# 日志配置
+logging:
+  level:
+    com.alibaba.cloud.nacos: info
+    com.alibaba.nacos: info

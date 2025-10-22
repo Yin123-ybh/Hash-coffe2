@@ -21,23 +21,40 @@ public class CouponSeckillMessageConsumer {
      * 这个方法会被RabbitMQ自动调用，处理队列中的消息
      */
     @RabbitListener(queues = "coupon.seckill.queue")
-    public void handleCouponSeckillMessage(CouponSeckillMessage message) {
+    public void handleCouponSeckillMessage(Object message) {
         log.info("========== 开始处理秒杀消息 ==========");
+        log.info("消息类型：{}", message.getClass().getName());
         log.info("消息内容：{}", message);
 
         try {
+            CouponSeckillMessage seckillMessage = null;
+            
+            // 处理不同类型的消息
+            if (message instanceof CouponSeckillMessage) {
+                // JSON格式消息
+                seckillMessage = (CouponSeckillMessage) message;
+                log.info("处理JSON格式消息");
+            } else if (message instanceof byte[]) {
+                // Java序列化消息 - 直接丢弃
+                log.warn("收到Java序列化消息，直接丢弃：{}", new String((byte[]) message));
+                return;
+            } else {
+                log.warn("未知消息类型，直接丢弃：{}", message);
+                return;
+            }
+
             // 1. 构建参与DTO
             CouponSeckillParticipateDTO participateDTO = CouponSeckillParticipateDTO.builder()
-                    .activityId(message.getActivityId())
-                    .quantity(message.getQuantity())
+                    .activityId(seckillMessage.getActivityId())
+                    .quantity(seckillMessage.getQuantity())
                     .build();
 
             // 2. 调用Service处理秒杀（执行Redis Lua脚本和数据库操作）
-            couponSeckillActivityService.processSeckillMessage(message.getUserId(), participateDTO);
+            couponSeckillActivityService.processSeckillMessage(seckillMessage.getUserId(), participateDTO);
             
             log.info("========== 秒杀消息处理成功 ==========");
             log.info("用户ID：{}，活动ID：{}，数量：{}", 
-                    message.getUserId(), message.getActivityId(), message.getQuantity());
+                    seckillMessage.getUserId(), seckillMessage.getActivityId(), seckillMessage.getQuantity());
         } catch (Exception e) {
             log.error("========== 秒杀消息处理失败 ==========");
             log.error("失败消息：{}", message);

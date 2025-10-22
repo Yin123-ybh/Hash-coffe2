@@ -1,5 +1,7 @@
 package com.coffee.controller.admin;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.coffee.dto.ProductDTO;
 import com.coffee.dto.ProductPageQueryDTO;
 import com.coffee.result.PageResult;
@@ -33,10 +35,19 @@ public class ProductController {
      */
     @GetMapping
     @ApiOperation("分页查询商品")
+    @SentinelResource(value = "productQuery", blockHandler = "handleProductQueryBlock")
     public Result<PageResult> page(ProductPageQueryDTO productPageQueryDTO) {
         log.info("分页查询商品: {}", productPageQueryDTO);
         PageResult pageResult = productService.pageQuery(productPageQueryDTO);
         return Result.success(pageResult);
+    }
+    
+    /**
+     * 商品查询流控降级处理
+     */
+    public Result<PageResult> handleProductQueryBlock(ProductPageQueryDTO productPageQueryDTO, BlockException ex) {
+        log.warn("商品查询触发流控，请求被限流: {}", ex.getMessage());
+        return Result.error("系统繁忙，请稍后重试");
     }
 
     /**

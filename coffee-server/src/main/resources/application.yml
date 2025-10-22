@@ -6,6 +6,58 @@ spring:
     active: dev
   main:
     allow-circular-references: true
+  application:
+    name: coffee-server
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: public
+        group: DEFAULT_GROUP
+      config:
+        enabled: true
+        server-addr: localhost:8848
+        namespace: public
+        group: DEFAULT_GROUP
+        file-extension: yml
+        import-check:
+          enabled: false
+    # Sentinel 配置
+    sentinel:
+      transport:
+        # Sentinel Dashboard 地址
+        dashboard: localhost:8889
+        # 应用与Sentinel Dashboard通信的端口
+        port: 8719
+        # 心跳发送周期，默认10秒
+        heartbeat-interval-ms: 10000
+      # 是否启用Sentinel
+      enabled: true
+      # 是否启用懒加载
+      eager: true
+      # 数据源配置
+      datasource:
+        # 流控规则数据源
+        flow:
+          nacos:
+            server-addr: localhost:8848
+            dataId: coffee-server-flow-rules
+            groupId: SENTINEL_GROUP
+            rule-type: flow
+        # 熔断规则数据源
+        degrade:
+          nacos:
+            server-addr: localhost:8848
+            dataId: coffee-server-degrade-rules
+            groupId: SENTINEL_GROUP
+            rule-type: degrade
+        # 系统规则数据源
+        system:
+          nacos:
+            server-addr: localhost:8848
+            dataId: coffee-server-system-rules
+            groupId: SENTINEL_GROUP
+            rule-type: system
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -91,6 +143,11 @@ logging:
     max-history: 30
 
 coffee:
+  # Nacos 配置
+  nacos:
+    server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+    namespace: ${NACOS_NAMESPACE:public}
+    group: ${NACOS_GROUP:DEFAULT_GROUP}
   jwt:
     # 设置jwt签名加密时使用的秘钥
     admin-secret-key: itcast

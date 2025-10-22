@@ -1,5 +1,7 @@
 package com.coffee.controller.user;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.coffee.dto.OrderCreateDTO;
 import com.coffee.dto.OrderPageQueryDTO;
 import com.coffee.result.PageResult;
@@ -33,10 +35,19 @@ public class OrderController {
 
     @GetMapping("/list")
     @ApiOperation("获取订单列表")
+    @SentinelResource(value = "orderQuery", blockHandler = "handleOrderQueryBlock")
     public Result<PageResult> getOrderList(OrderPageQueryDTO orderPageQueryDTO) {
         log.info("获取订单列表：{}", orderPageQueryDTO);
         PageResult pageResult = orderService.pageQuery(orderPageQueryDTO);
         return Result.success(pageResult);
+    }
+    
+    /**
+     * 订单查询流控降级处理
+     */
+    public Result<PageResult> handleOrderQueryBlock(OrderPageQueryDTO orderPageQueryDTO, BlockException ex) {
+        log.warn("订单查询触发流控，请求被限流: {}", ex.getMessage());
+        return Result.error("系统繁忙，请稍后重试");
     }
 
     @GetMapping("/{id}")
